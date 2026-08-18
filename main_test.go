@@ -517,15 +517,18 @@ func TestSyncDirs(t *testing.T) {
 	r2, w2, _ := os.Pipe()
 	os.Stdout = w2
 	
+	copied := make(chan struct{})
 	go func() {
+		defer close(copied)
 		io.Copy(&buf, r2)
 	}()
-	
+
 	err := syncDirs()
-	
+
 	w2.Close()
 	os.Stdout = oldStdout
-	
+	<-copied
+
 	if err != nil {
 		t.Fatalf("syncDirs() error = %v", err)
 	}
